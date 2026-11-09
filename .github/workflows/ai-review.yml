@@ -1,0 +1,37 @@
+name: "AI PR Assistant"
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write 
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run GenAI Code Review
+        uses: cirolini/genai-code-review@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ai_provider: 'gemini'
+          ai_api_key: ${{ secrets.GEMINI_API_KEY }}
+          model: 'gemini-1.5-flash' 
+          max_comments: 5 
+          prompt: |
+            Review this code as a peer-level AI assistant.
+          
+            Do not approve the pull request. Provide only constructive, actionable feedback.
+          
+            Focus especially on:
+            - Missing, insufficient, or overly broad error handling (for example, blanket `except:` blocks).
+            - Hardcoded credentials, API keys, secrets, or other sensitive values.
+            - Logic errors, edge cases, performance concerns, and clear opportunities for improvement.
+          
+            For each issue, explain the concern and suggest a practical fix. If no issues are found in an area, do not add unnecessary commentary.
+
