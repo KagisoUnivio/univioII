@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   python-quality:
@@ -83,23 +82,20 @@ jobs:
           ignore-unfixed: true
           exit-code: '1'
 
-  ai-review:
-    name: Gemini code review
+  codeql:
+    name: CodeQL security analysis
     runs-on: ubuntu-latest
-    # GitHub does not provide repository secrets to workflows from forks.
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+      security-events: write
     steps:
-      - name: Review pull request with Gemini
-        uses: cirolini/genai-code-review@v3
+      - uses: actions/checkout@v6
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
         with:
-          provider: gemini
-          model: gemini-1.5-flash
-          api_key: ${{ secrets.GEMINI_API_KEY }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          github_pr_id: ${{ github.event.number }}
-          max_comments: 5
-          custom_prompt: >-
-            Review this pull request as a peer-level engineer. Provide only
-            constructive, actionable findings. Prioritize logic bugs, exposed
-            credentials or secrets, unsafe input handling, and overly broad
-            exception handling such as bare except blocks. Do not approve the PR.
+          languages: python
+          build-mode: none
+
+      - name: Analyze Python code
+        uses: github/codeql-action/analyze@v4
