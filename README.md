@@ -57,9 +57,9 @@ dev → pull request to main → production deployment workflow
 ```
 
 The pull-request validation workflow includes Python quality checks, a Docker
-build, Semgrep, TruffleHog, Trivy, and AI-assisted review. Deployment workflows
-use environment-scoped configuration and short-lived AWS credentials through
-GitHub OIDC; no AWS access keys are stored in the repository.
+build, Semgrep, TruffleHog, Trivy, and CodeQL security analysis. Deployment
+workflows use environment-scoped configuration and short-lived AWS credentials
+through GitHub OIDC; no AWS access keys are stored in the repository.
 
 ## Security basics
 
