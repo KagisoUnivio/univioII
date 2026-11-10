@@ -93,7 +93,7 @@ jobs:
         uses: cirolini/genai-code-review@v3
         with:
           provider: openai
-          api_key: ${{ secrets.OPENAI_API_KEY }}
+          api_key: ${{ secrets.OPEN_AI_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           github_pr_id: ${{ github.event.number }}
           max_comments: 5
