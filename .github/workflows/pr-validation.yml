@@ -93,7 +93,7 @@ jobs:
         uses: cirolini/genai-code-review@v3
         with:
           provider: gemini
-          model: gemini-3.8-flash
+          model: gemini-3.5-flash-lite
           api_key: ${{ secrets.GEMINI_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           github_pr_id: ${{ github.event.number }}
