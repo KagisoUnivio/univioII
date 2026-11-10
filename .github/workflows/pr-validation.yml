@@ -84,17 +84,16 @@ jobs:
           exit-code: '1'
 
   ai-review:
-    name: Gemini code review
+    name: OpenAI code review
     runs-on: ubuntu-latest
     # GitHub does not provide repository secrets to workflows from forks.
     if: github.event.pull_request.head.repo.full_name == github.repository
     steps:
-      - name: Review pull request with Gemini
+      - name: Review pull request with OpenAI
         uses: cirolini/genai-code-review@v3
         with:
-          provider: gemini
-          model: gemini-3.5-flash-lite
-          api_key: ${{ secrets.GEMINI_API_KEY }}
+          provider: openai
+          api_key: ${{ secrets.OPENAI_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           github_pr_id: ${{ github.event.number }}
           max_comments: 5
