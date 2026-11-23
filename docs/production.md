@@ -118,6 +118,64 @@ They intentionally do not claim to deploy ECS. Configure each GitHub Environment
 with AWS_REGION, AWS_ROLE_ARN and ECR_REPOSITORY; retain branch restrictions and
 required production reviewers. Use separate production and staging role trust.
 
+### Staging registry account
+
+Staging publishes to account `840597515019` in `eu-north-1`. Create the private
+ECR repository `univio` in that account and region. The staging workflow checks
+the identity returned by AWS before logging in to ECR. Set these variables under
+GitHub **Settings → Environments → staging**:
+
+| Variable | Value |
+|---|---|
+| `AWS_REGION` | `eu-north-1` |
+| `ECR_REPOSITORY` | `univio` |
+| `AWS_ROLE_ARN` | `arn:aws:iam::840597515019:role/github-actions-univio-staging` (if using the role name below) |
+
+In account `840597515019`, create or reuse the IAM OIDC provider
+`https://token.actions.githubusercontent.com` with audience `sts.amazonaws.com`.
+Create the role `github-actions-univio-staging` with this trust policy:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {"Federated": "arn:aws:iam::840597515019:oidc-provider/token.actions.githubusercontent.com"},
+    "Action": "sts:AssumeRoleWithWebIdentity",
+    "Condition": {"StringEquals": {
+      "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+      "token.actions.githubusercontent.com:sub": "repo:KagisoUnivio@266813228/univioII@1451647734:environment:staging"
+    }}
+  }]
+}
+```
+
+Attach this separate permissions policy to the role:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {"Effect": "Allow", "Action": "ecr:GetAuthorizationToken", "Resource": "*"},
+    {
+      "Effect": "Allow",
+      "Action": ["ecr:BatchCheckLayerAvailability", "ecr:BatchGetImage",
+                 "ecr:InitiateLayerUpload", "ecr:UploadLayerPart",
+                 "ecr:CompleteLayerUpload", "ecr:PutImage"],
+      "Resource": "arn:aws:ecr:eu-north-1:840597515019:repository/univio"
+    }
+  ]
+}
+```
+
+Keep the GitHub `staging` environment restricted to `dev`. After the next
+staging publish, use the image digest from the new registry when creating the
+migration, API and worker task definitions. Older builds remain in the old
+registry. See [GitHub OIDC with AWS](https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-aws)
+and [AWS ECR push permissions](https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-push-iam.html).
+
+### Rollout checklist
+
 For each release: run all PR checks, publish a scanned image, record its digest,
 run the migration task, update the API and worker task definitions to that digest,
 roll out in staging, run signed webhook smoke tests, then approve production.
