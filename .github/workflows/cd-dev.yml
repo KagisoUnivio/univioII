@@ -13,3 +13,4 @@ jobs:
     uses: ./.github/workflows/publish-image.yml
     with:
       environment: staging
+      expected_aws_account_id: '840597515019'

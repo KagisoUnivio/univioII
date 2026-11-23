@@ -16,3 +16,5 @@ CREATE TABLE inbox (
 );
 CREATE INDEX inbox_pending ON inbox (available_at) WHERE state IN ('pending','processing');
 CREATE INDEX inbox_retention ON inbox (updated_at) WHERE state IN ('sent','dead');
+
+-- Hello World.

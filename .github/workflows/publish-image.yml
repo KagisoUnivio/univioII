@@ -6,6 +6,9 @@ on:
       environment:
         required: true
         type: string
+      expected_aws_account_id:
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -33,6 +36,7 @@ jobs:
         with:
           aws-region: ${{ vars.AWS_REGION }}
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          allowed-account-ids: ${{ inputs.expected_aws_account_id }}
       - uses: aws-actions/amazon-ecr-login@v2
         id: ecr
       - name: Build image
