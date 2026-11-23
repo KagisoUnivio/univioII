@@ -23,10 +23,12 @@ RUN python -m pip install --no-cache-dir -r requirements.txt \
 
 COPY src ./src
 
-ADD --chmod=0644 \
-    --checksum=sha256:8d8dc42958c7b9351846609d552b4b38f3b19c92c9d4816b2f814fd148fe18be \
+ADD --checksum=sha256:8d8dc42958c7b9351846609d552b4b38f3b19c92c9d4816b2f814fd148fe18be \
     https://truststore.pki.rds.amazonaws.com/eu-north-1/eu-north-1-bundle.pem \
     /app/certs/rds-ca.pem
+
+# The runtime user must be able to traverse the directory and read the CA.
+RUN chmod 0755 /app/certs && chmod 0644 /app/certs/rds-ca.pem
 
 USER app
 
