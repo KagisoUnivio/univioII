@@ -17,9 +17,11 @@ API/worker task plus migration/administration headroom.
 Use the RDS endpoint hostname, not an IP/custom alias that fails certificate
 hostname verification. Enforce server TLS (`rds.force_ssl`) and use the current
 [AWS CA bundle](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html).
-Package that public CA bundle into your deployment image or mount it read-only;
-set DATABASE_CA_FILE to its absolute in-container path. The repo does not embed
-an unreviewed certificate download into each application startup.
+The Dockerfile downloads the public Stockholm (`eu-north-1`) CA bundle during
+the image build and verifies its pinned SHA-256 checksum. For that image, set
+`DATABASE_CA_FILE=/app/certs/rds-ca.pem`. If AWS updates the bundle, verify the
+new bundle and update the checksum before publishing a new image. For another
+region, provide the appropriate bundle and configure its in-container path.
 
 ## 2. Configure secrets and roles
 
