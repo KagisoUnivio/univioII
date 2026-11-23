@@ -1,4 +1,4 @@
-name: Deploy to Production
+name: Publish production image
 
 on:
   push:
@@ -6,21 +6,10 @@ on:
 
 permissions:
   contents: read
-
-concurrency:
-  group: production-deployment
-  cancel-in-progress: false
+  id-token: write
 
 jobs:
-  deploy:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Build production container image
-        run: docker build --tag univio-production:${{ github.sha }} .
-
-      - name: Deploy production container
-        run: echo "Replace this with the production registry push and deployment command."
+  publish:
+    uses: ./.github/workflows/publish-image.yml
+    with:
+      environment: production

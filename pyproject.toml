@@ -1,0 +1,8 @@
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+markers = ["postgres: requires TEST_DATABASE_URL pointing to an isolated PostgreSQL database"]
+
+[tool.ruff]
+src = ["src"]
+target-version = "py311"

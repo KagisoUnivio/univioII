@@ -12,6 +12,20 @@ jobs:
   python-quality:
     name: Python tests and quality
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: univio_test
+          POSTGRES_PASSWORD: local-ci-only
+          POSTGRES_DB: univio_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U univio_test -d univio_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://univio_test:local-ci-only@localhost:5432/univio_test
     steps:
       - uses: actions/checkout@v6
 
@@ -23,10 +37,13 @@ jobs:
       - name: Install quality tools
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pytest ruff
+          python -m pip install -r requirements-dev.txt
 
       - name: Lint Python code
         run: ruff check .
+
+      - name: Check formatting
+        run: ruff format --check .
 
       - name: Run tests
         run: pytest -q
