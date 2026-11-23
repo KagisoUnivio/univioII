@@ -57,6 +57,12 @@ jobs:
       - name: Build container image
         run: docker build --tag univio:${{ github.sha }} .
 
+      - name: Smoke-test runtime imports and the RDS certificate
+        run: >-
+          docker run --rm --entrypoint python univio:${{ github.sha }} -c
+          'import ssl; import univio.app, univio.migrate, univio.worker;
+          ssl.create_default_context(cafile="/app/certs/rds-ca.pem")'
+
   semgrep:
     name: Semgrep security scan
     runs-on: ubuntu-latest

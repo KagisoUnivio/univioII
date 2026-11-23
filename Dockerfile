@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM python:3.11-slim
+FROM python:3.11-slim-trixie
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -7,10 +7,19 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends --only-upgrade zlib1g \
+    && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' zlib1g)" ge '1:1.3.dfsg+really1.3.1-1+deb13u1' \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN groupadd --system app && useradd --system --gid app app
 
 COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+# Keep Python build tools and their vendored libraries out of the runtime.
+RUN python -m pip install --no-cache-dir -r requirements.txt \
+    && python -m pip uninstall -y setuptools \
+    && python -m pip check \
+    && python -m pip uninstall -y pip
 
 COPY src ./src
 
