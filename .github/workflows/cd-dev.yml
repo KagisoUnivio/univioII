@@ -1,4 +1,4 @@
-name: Deploy to Staging
+name: Publish staging image
 
 on:
   push:
@@ -8,61 +8,8 @@ permissions:
   contents: read
   id-token: write
 
-concurrency:
-  group: staging-deployment
-  cancel-in-progress: false
-
 jobs:
-  deploy:
-    name: Deploy to Staging
-    runs-on: ubuntu-latest
-    environment: staging
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Diagnose AWS OIDC trust claims
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          import base64
-          import json
-          import os
-          import urllib.request
-
-          url = os.environ["ACTIONS_ID_TOKEN_REQUEST_URL"]
-          url += ("&" if "?" in url else "?") + "audience=sts.amazonaws.com"
-          request = urllib.request.Request(
-              url,
-              headers={
-                  "Authorization": "Bearer " + os.environ["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]
-              },
-          )
-          with urllib.request.urlopen(request, timeout=30) as response:
-              token = json.load(response)["value"]
-          print("::add-mask::" + token)
-          payload = token.split(".")[1]
-          claims = json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4)))
-          # Diagnostic decoding only; AWS validates the token's signature.
-          for key in ("iss", "aud", "sub", "repository", "ref"):
-              print(f"{key}: {claims.get(key)}")
-          PY
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v6
-        with:
-          aws-region: ${{ vars.AWS_REGION }}
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
-          role-session-name: univio-staging-deployment
-
-      - name: Log in to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build and push staging container image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          docker build --tag "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" .
-          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+  publish:
+    uses: ./.github/workflows/publish-image.yml
+    with:
+      environment: staging
